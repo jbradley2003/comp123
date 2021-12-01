@@ -1,0 +1,74 @@
+import csv
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import animation
+
+
+# basic CSV reader for potential use
+
+def readCSV(filename):
+    """Given a CSV filename, read in data as dictionaries and build
+    a list of dictionaries to hold the data. Return two values: a list
+    of the field names (column headers in the CSV file), and the
+    list of dictionaries holding the data."""
+
+    dataIn = open(filename, 'r')
+    csvReader = csv.DictReader(dataIn)
+    fields = csvReader.fieldnames  # grabs the column labels
+
+    # loop through the rows of the table, each is a dictionary
+    # update table accumulator variable, building a list of dictionaries
+    table = []
+    for rowDict in csvReader:
+        table.append(rowDict)
+    dataIn.close()
+    return fields, table
+
+
+# CSV Manipulation with Pandas
+
+file = '/Users/james/PycharmProjects/comp123project/CSVs/seasonWinners.csv'
+
+# lines 35-37 reorganizes the seasonWinners.csv file into the modSet.csv file
+df = pd.read_csv(file, sep=',')
+column_names = ['winner', 'lg', 'year', 'w-l-t', 'totalWins']
+df = df.reindex(columns=column_names)
+df = df.loc[::-1]
+team_list = ['Green Bay Packers', 'Washington Redskins', 'Chicago Bears']  # choose what teams to follow
+barchart_data = df.loc[df['winner'].isin(team_list), :]
+print(df)
+print(barchart_data)
+
+# Bar Chart animation with matplotlib
+
+font = {
+    'weight': 'normal',
+    'size':  40,
+    'color': 'lightgray'
+}
+
+years = barchart_data['year'].unique()
+colors = ['#FF0000', '#169b62', '#008c45', '#aa151b', '#002868']
+
+fig, ax = plt.subplots(figsize=(10, 5))
+label = ax.text(0.95, 0.2, years[0], horizontalalignment='right', verticalalignment='top', transform=ax.transAxes,
+                fontdict=font)
+
+
+def update_barchart(i):
+    year = years[i]
+
+    data_temp = barchart_data.loc[barchart_data['year'] == year, :]
+    ax.clear()
+    ax.barh(data_temp.winner, data_temp.totalWins, color=colors)
+    label.set_text(year)
+
+
+anim = animation.FuncAnimation(fig, update_barchart, frames=len(years), interval=600)
+anim.save('barchart.gif')
+
+plt.show()
+
+# GUI
+
+a_list = df['year'].tolist()
